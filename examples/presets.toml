@@ -1,0 +1,8 @@
+# Example lap-bell presets. Copy to ~/.config/lap-bell/presets.toml
+# or point LAPBELL_PRESETS at this file.
+
+tea = "4m"
+eggs = { duration = "7m30s", label = "Soft-boiled eggs" }
+focus = { duration = "25m", label = "Focus block" }
+break = { duration = "5m", label = "Stretch break" }
+standup = { duration = "0:15:00", label = "Stand-up call" }

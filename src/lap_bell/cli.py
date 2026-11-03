@@ -6,6 +6,7 @@ import sys
 from . import __version__
 from .duration import format_clock, parse_duration
 from .notify import notify
+from .presets import PresetError, load_presets, presets_path
 from .stopwatch import run_stopwatch
 from .timer import run_timer
 
@@ -16,26 +17,54 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     timer = sub.add_parser("timer", help="count down and notify when time is up")
-    timer.add_argument("duration", help="e.g. 25m, 1h30m, 90s, 1:30 (a bare number means minutes)")
+    timer.add_argument("duration", help="a preset name, or e.g. 25m, 1h30m, 90s, 1:30 (a bare number means minutes)")
     timer.add_argument("label", nargs="*", help="text shown in the countdown and the notification")
 
     sub.add_parser("stopwatch", help="count up; Enter records a lap, q stops")
+    sub.add_parser("presets", help="list the presets from the presets file")
     return parser
 
 
 def cmd_timer(args) -> int:
+    label = " ".join(args.label)
     try:
-        seconds = parse_duration(args.duration)
-    except ValueError as err:
+        presets = load_presets(presets_path())
+    except PresetError as err:
         print(f"lapbell: {err}", file=sys.stderr)
         return 2
-    label = " ".join(args.label)
+    preset = presets.get(args.duration)
+    if preset:
+        seconds = preset.seconds
+        label = label or preset.label or preset.name
+    else:
+        try:
+            seconds = parse_duration(args.duration)
+        except ValueError as err:
+            print(f"lapbell: {err}", file=sys.stderr)
+            return 2
     try:
         run_timer(seconds, label)
     except KeyboardInterrupt:
         print("\ncancelled", file=sys.stderr)
         return 130
     notify("Time is up", label or f"{format_clock(seconds)} timer finished")
+    return 0
+
+
+def cmd_presets() -> int:
+    path = presets_path()
+    try:
+        presets = load_presets(path)
+    except PresetError as err:
+        print(f"lapbell: {err}", file=sys.stderr)
+        return 2
+    if not presets:
+        print(f"no presets in {path}")
+        return 0
+    width = max(len(name) for name in presets)
+    for preset in presets.values():
+        line = f"{preset.name.ljust(width)}  {format_clock(preset.seconds):>8}"
+        print(f"{line}  {preset.label}" if preset.label else line)
     return 0
 
 
@@ -46,6 +75,8 @@ def main(argv=None) -> int:
     if args.command == "stopwatch":
         run_stopwatch()
         return 0
+    if args.command == "presets":
+        return cmd_presets()
     return 2
 
 
