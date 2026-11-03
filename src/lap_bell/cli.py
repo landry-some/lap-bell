@@ -6,6 +6,7 @@ import sys
 from . import __version__
 from .duration import format_clock, parse_duration
 from .notify import notify
+from .stopwatch import run_stopwatch
 from .timer import run_timer
 
 
@@ -17,6 +18,8 @@ def build_parser() -> argparse.ArgumentParser:
     timer = sub.add_parser("timer", help="count down and notify when time is up")
     timer.add_argument("duration", help="e.g. 25m, 1h30m, 90s, 1:30 (a bare number means minutes)")
     timer.add_argument("label", nargs="*", help="text shown in the countdown and the notification")
+
+    sub.add_parser("stopwatch", help="count up; Enter records a lap, q stops")
     return parser
 
 
@@ -40,6 +43,9 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "timer":
         return cmd_timer(args)
+    if args.command == "stopwatch":
+        run_stopwatch()
+        return 0
     return 2
 
 
