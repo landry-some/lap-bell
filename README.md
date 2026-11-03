@@ -29,7 +29,60 @@ On Linux, `notify-send` comes from the `libnotify-bin` package (Debian/Ubuntu) o
 
 ## Run
 
-Usage is filled in as the v0.1 features land.
+### Timer
+
+```bash
+lapbell timer 25m                 # count down 25 minutes
+lapbell timer 4m green tea        # the label shows in the countdown and the notification
+lapbell timer 1:30                # MM:SS or HH:MM:SS also work
+lapbell timer 10                  # a bare number means minutes
+```
+
+Durations: `90s`, `25m`, `1h`, `1h30m`, `1.5h`, `1:30`, `0:25:00`. The countdown redraws
+one line in the terminal. When it hits zero you get a desktop notification ("Time is
+up" plus the label). Ctrl-C cancels without notifying.
+
+### Stopwatch
+
+```bash
+lapbell stopwatch
+```
+
+Press Enter to record a lap. Type `q` and Enter, or press Ctrl-D or Ctrl-C, to stop.
+The time at stop counts as the last lap, and lap-bell prints a table with each lap's
+time, the running total, and the fastest and slowest laps.
+
+```
+lap     time    total
+  1  00:42.1  00:42.1
+  2  00:38.6  01:20.7  fastest
+  3  00:51.3  02:12.0  slowest
+```
+
+### Presets
+
+Put named timers in `~/.config/lap-bell/presets.toml` (or
+`$XDG_CONFIG_HOME/lap-bell/presets.toml`, or any file named by `$LAPBELL_PRESETS`):
+
+```toml
+tea = "4m"
+focus = { duration = "25m", label = "Focus block" }
+```
+
+```bash
+lapbell timer focus               # 25 minutes, labelled "Focus block"
+lapbell timer tea oolong          # a label on the command line wins over the preset's
+lapbell presets                   # list what's defined
+```
+
+There's a sample file in [examples/presets.toml](examples/presets.toml). Try it without
+touching your config:
+
+```bash
+LAPBELL_PRESETS=examples/presets.toml lapbell presets
+```
+
+A preset name wins over a duration with the same text.
 
 ## Test
 
