@@ -41,11 +41,12 @@ lapbell timer @14:30 stand-up     # count down to a time of day (HH:MM or HH:MM:
 
 Durations: `90s`, `25m`, `1h`, `1h30m`, `1.5h`, `1:30`, `0:25:00`. An `@` end time is
 read on the 24-hour clock; if that time has already passed today, the timer runs until
-that time tomorrow. The countdown redraws
-one line in the terminal, cut to the terminal width so it never wraps. When the output
-isn't a terminal (`lapbell timer 5m | tee log`), it prints one line at the start and one
-at the end instead. When it hits zero you get a desktop notification ("Time is
-up" plus the label). Ctrl-C cancels without notifying.
+that time tomorrow. The countdown redraws one line in the terminal, cut to the terminal
+width so it never wraps. When the output isn't a terminal (`lapbell timer 5m | tee
+log`), it prints one line at the start and one at the end instead. When it hits zero you
+get a desktop notification ("Time is up" plus the label). Ctrl-C cancels without
+notifying. The countdown keeps time while the laptop sleeps and ignores changes to the
+system clock, so it ends on time after you open the lid again.
 
 ### Stopwatch
 

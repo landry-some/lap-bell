@@ -22,7 +22,7 @@ Planned work after v0.1, with rough estimates. Total: about 35 hours.
 
 ## Bugs and edge cases
 
-- [ ] Keep the countdown correct after the laptop sleeps or the clock jumps (1.5h)
+- [x] Keep the countdown correct after the laptop sleeps or the clock jumps (1.5h)
 - [x] Handle a narrow or non-TTY output without broken `\r` lines (1h)
 - [x] Warn when a preset name looks like a duration and hides it, e.g. `10m = "5m"` (0.5h)
 

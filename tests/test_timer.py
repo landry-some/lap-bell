@@ -1,10 +1,11 @@
 import io
+import time
 from datetime import datetime
 
 import pytest
 
 from lap_bell import cli
-from lap_bell.timer import run_timer
+from lap_bell.timer import awake_clock, run_timer
 
 
 class FakeClock:
@@ -57,6 +58,28 @@ def test_slow_sleep_does_not_drift():
     # Overshooting sleeps get absorbed; the timer still ends at the 3 s mark or just after.
     assert clock.now - 100.0 < 3.5
     assert frames(out.getvalue())[-1] == "00:00"
+
+
+def test_suspend_mid_countdown_ends_at_wake():
+    clock = FakeClock()
+    out = Tty()
+    naps = []
+
+    def suspended_sleep(seconds):
+        naps.append(seconds)
+        clock.now += seconds if len(naps) > 1 else 3600  # first sleep: laptop closed for an hour
+
+    run_timer(600, clock=clock, sleep=suspended_sleep, out=out)
+    assert len(naps) == 1
+    assert frames(out.getvalue()) == ["10:00", "00:00"]
+
+
+def test_awake_clock_per_platform(monkeypatch):
+    if hasattr(time, "CLOCK_BOOTTIME"):
+        assert abs(awake_clock("linux")() - time.clock_gettime(time.CLOCK_BOOTTIME)) < 1
+    assert awake_clock("win32") is time.monotonic
+    monkeypatch.delattr(time, "CLOCK_BOOTTIME", raising=False)
+    assert awake_clock("linux") is time.monotonic
 
 
 def test_non_tty_prints_start_and_end_lines_only():
