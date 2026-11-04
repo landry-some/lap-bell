@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 
 import pytest
 
@@ -76,3 +77,22 @@ def test_cli_cancel_skips_notification(monkeypatch, capsys):
     assert cli.main(["timer", "1m"]) == 130
     assert notified == []
     assert "cancelled" in capsys.readouterr().err
+
+
+def test_cli_absolute_end_time(monkeypatch):
+    class FixedNow(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 3, 10, 14, 0, 0)
+
+    seen = {}
+    monkeypatch.setattr(cli, "datetime", FixedNow)
+    monkeypatch.setattr(cli, "run_timer", lambda seconds, label: seen.update(seconds=seconds, label=label))
+    monkeypatch.setattr(cli, "notify", lambda title, body: None)
+    assert cli.main(["timer", "@14:30", "meeting"]) == 0
+    assert seen == {"seconds": 1800, "label": "meeting"}
+
+
+def test_cli_rejects_bad_end_time(capsys):
+    assert cli.main(["timer", "@25:00"]) == 2
+    assert "no such time of day" in capsys.readouterr().err

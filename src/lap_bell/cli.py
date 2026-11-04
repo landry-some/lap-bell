@@ -2,9 +2,10 @@
 
 import argparse
 import sys
+from datetime import datetime
 
 from . import __version__
-from .duration import format_clock, parse_duration
+from .duration import format_clock, parse_duration, seconds_until
 from .notify import notify
 from .presets import PresetError, load_presets, looks_like_duration, presets_path
 from .stopwatch import run_stopwatch
@@ -17,7 +18,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     timer = sub.add_parser("timer", help="count down and notify when time is up")
-    timer.add_argument("duration", help="a preset name, or e.g. 25m, 1h30m, 90s, 1:30 (a bare number means minutes)")
+    timer.add_argument(
+        "duration",
+        help="a preset name, e.g. 25m, 1h30m, 90s, 1:30 (a bare number means minutes), or an end time like @14:30",
+    )
     timer.add_argument("label", nargs="*", help="text shown in the countdown and the notification")
 
     sub.add_parser("stopwatch", help="count up; Enter records a lap, q stops")
@@ -44,7 +48,10 @@ def cmd_timer(args) -> int:
         label = label or preset.label or preset.name
     else:
         try:
-            seconds = parse_duration(args.duration)
+            if args.duration.startswith("@"):
+                seconds = seconds_until(args.duration[1:], datetime.now())
+            else:
+                seconds = parse_duration(args.duration)
         except ValueError as err:
             print(f"lapbell: {err}", file=sys.stderr)
             return 2

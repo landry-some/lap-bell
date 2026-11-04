@@ -1,6 +1,8 @@
+from datetime import datetime
+
 import pytest
 
-from lap_bell.duration import format_clock, parse_duration
+from lap_bell.duration import format_clock, parse_duration, seconds_until
 
 
 @pytest.mark.parametrize(
@@ -48,3 +50,26 @@ def test_parse_invalid(text):
 )
 def test_format_clock(seconds, text):
     assert format_clock(seconds) == text
+
+
+NOW = datetime(2026, 3, 10, 14, 0, 30, 500000)
+
+
+@pytest.mark.parametrize(
+    "text, seconds",
+    [
+        ("14:30", 29 * 60 + 29.5),
+        ("15:00:00", 3569.5),
+        ("9:05", 19 * 3600 + 4 * 60 + 29.5),  # already passed today: tomorrow
+        ("14:00", 24 * 3600 - 30.5),
+        ("00:00", 10 * 3600 - 30.5),
+    ],
+)
+def test_seconds_until(text, seconds):
+    assert seconds_until(text, NOW) == pytest.approx(seconds)
+
+
+@pytest.mark.parametrize("text", ["", "14", "24:00", "12:60", "12:00:60", "1:2:3:4", "noon", "-1:00"])
+def test_seconds_until_invalid(text):
+    with pytest.raises(ValueError):
+        seconds_until(text, NOW)

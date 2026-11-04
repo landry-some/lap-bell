@@ -1,6 +1,7 @@
 """Parse and format durations like ``25m``, ``1h30m``, ``90s`` or ``1:30``."""
 
 import re
+from datetime import datetime, timedelta
 
 _UNIT_SECONDS = {"h": 3600, "m": 60, "s": 1}
 _UNIT_PART = re.compile(r"(\d+(?:\.\d+)?)([hms])")
@@ -62,6 +63,21 @@ def _parse_units(raw: str) -> float:
     if pos != len(raw) or not seen:
         raise ValueError(f"bad duration: {raw!r} (try 25m, 1h30m, 90s or 1:30)")
     return total
+
+
+def seconds_until(text: str, now: datetime) -> float:
+    """Return the seconds from ``now`` until the wall-clock time ``HH:MM`` or
+    ``HH:MM:SS`` (24-hour). A time that has already passed today means tomorrow."""
+    parts = text.strip().split(":")
+    if len(parts) not in (2, 3) or not all(p.isdigit() for p in parts):
+        raise ValueError(f"bad end time: {text!r} (use HH:MM or HH:MM:SS, e.g. @14:30)")
+    hour, minute, second = (int(p) for p in parts + ["0"] * (3 - len(parts)))
+    if hour > 23 or minute > 59 or second > 59:
+        raise ValueError(f"no such time of day: {text!r}")
+    end = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
+    if end <= now:
+        end += timedelta(days=1)
+    return (end - now).total_seconds()
 
 
 def format_clock(seconds: float) -> str:

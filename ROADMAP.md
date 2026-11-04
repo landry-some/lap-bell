@@ -12,7 +12,7 @@ Planned work after v0.1, with rough estimates. Total: about 35 hours.
 ## Features
 
 - [ ] Pause and resume a running timer with a key press (3h)
-- [ ] Absolute end times: `lapbell timer @14:30` (2h)
+- [x] Absolute end times: `lapbell timer @14:30` (2h)
 - [ ] Pomodoro mode: work/break cycles with a counter (3h)
 - [ ] Run timers in the background and list/cancel them (`lapbell ls`, `lapbell cancel`) (5h)
 - [ ] Optional sound on finish, from a configurable file (2h)
