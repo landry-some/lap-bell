@@ -6,7 +6,7 @@ import sys
 from . import __version__
 from .duration import format_clock, parse_duration
 from .notify import notify
-from .presets import PresetError, load_presets, presets_path
+from .presets import PresetError, load_presets, looks_like_duration, presets_path
 from .stopwatch import run_stopwatch
 from .timer import run_timer
 
@@ -34,6 +34,12 @@ def cmd_timer(args) -> int:
         return 2
     preset = presets.get(args.duration)
     if preset:
+        if looks_like_duration(preset.name):
+            print(
+                f"lapbell: using preset {preset.name!r} ({format_clock(preset.seconds)}), "
+                f"not the duration {preset.name}; rename the preset to get the duration back",
+                file=sys.stderr,
+            )
         seconds = preset.seconds
         label = label or preset.label or preset.name
     else:

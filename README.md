@@ -82,7 +82,8 @@ touching your config:
 LAPBELL_PRESETS=examples/presets.toml lapbell presets
 ```
 
-A preset name wins over a duration with the same text.
+A preset name wins over a duration with the same text. If a preset is named like a
+duration (say `10m = "5m"`), `lapbell timer 10m` warns that the preset is hiding it.
 
 ## Test
 

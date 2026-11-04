@@ -35,6 +35,16 @@ def presets_path(env=os.environ) -> Path:
     return Path(base) / "lap-bell" / "presets.toml"
 
 
+def looks_like_duration(name: str) -> bool:
+    """True if ``name`` would also parse as a duration, so a preset with that name
+    hides the duration on the command line."""
+    try:
+        parse_duration(name)
+    except ValueError:
+        return False
+    return True
+
+
 def load_presets(path: Path) -> dict[str, Preset]:
     """Read presets from ``path``. A missing file means no presets."""
     try:

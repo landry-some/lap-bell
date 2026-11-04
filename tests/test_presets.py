@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from lap_bell import cli
-from lap_bell.presets import Preset, PresetError, load_presets, presets_path
+from lap_bell.presets import Preset, PresetError, load_presets, looks_like_duration, presets_path
 
 EXAMPLE = Path(__file__).parent.parent / "examples" / "presets.toml"
 
@@ -85,3 +85,19 @@ def test_presets_command_lists(isolated_presets, capsys):
 def test_presets_command_empty(isolated_presets, capsys):
     assert cli.main(["presets"]) == 0
     assert capsys.readouterr().out.strip() == f"no presets in {isolated_presets}"
+
+
+@pytest.mark.parametrize("name, expected", [("10m", True), ("25", True), ("1:30", True), ("tea", False), ("m", False)])
+def test_looks_like_duration(name, expected):
+    assert looks_like_duration(name) is expected
+
+
+def test_timer_warns_when_preset_hides_duration(isolated_presets, monkeypatch, capsys):
+    isolated_presets.write_text('10m = "5m"\ntea = "4m"\n')
+    seen = fake_timer(monkeypatch)
+    assert cli.main(["timer", "10m"]) == 0
+    assert seen["seconds"] == 300
+    err = capsys.readouterr().err
+    assert "preset '10m' (05:00), not the duration 10m" in err
+    assert cli.main(["timer", "tea"]) == 0
+    assert capsys.readouterr().err == ""
