@@ -20,13 +20,18 @@ class FakeClock:
         self.now += seconds
 
 
+class Tty(io.StringIO):
+    def isatty(self):
+        return True
+
+
 def frames(output):
     return [f.replace("\x1b[K", "") for f in output.strip("\n").split("\r") if f]
 
 
 def test_counts_down_each_second():
     clock = FakeClock()
-    out = io.StringIO()
+    out = Tty()
     run_timer(3, "tea", clock=clock, sleep=clock.sleep, out=out)
     assert frames(out.getvalue()) == ["00:03  tea", "00:02  tea", "00:01  tea", "00:00  tea"]
     assert sum(clock.sleeps) == pytest.approx(3)
@@ -35,7 +40,7 @@ def test_counts_down_each_second():
 
 def test_fractional_start_aligns_to_seconds():
     clock = FakeClock()
-    out = io.StringIO()
+    out = Tty()
     run_timer(2.5, clock=clock, sleep=clock.sleep, out=out)
     assert frames(out.getvalue()) == ["00:03", "00:02", "00:01", "00:00"]
     assert clock.sleeps[0] == pytest.approx(0.5)
@@ -43,7 +48,7 @@ def test_fractional_start_aligns_to_seconds():
 
 def test_slow_sleep_does_not_drift():
     clock = FakeClock()
-    out = io.StringIO()
+    out = Tty()
 
     def late_sleep(seconds):
         clock.now += seconds + 0.3
@@ -52,6 +57,21 @@ def test_slow_sleep_does_not_drift():
     # Overshooting sleeps get absorbed; the timer still ends at the 3 s mark or just after.
     assert clock.now - 100.0 < 3.5
     assert frames(out.getvalue())[-1] == "00:00"
+
+
+def test_non_tty_prints_start_and_end_lines_only():
+    clock = FakeClock()
+    out = io.StringIO()
+    run_timer(3, "tea", clock=clock, sleep=clock.sleep, out=out)
+    assert out.getvalue() == "00:03  tea\n00:00  tea\n"
+    assert sum(clock.sleeps) == pytest.approx(3)
+
+
+def test_narrow_terminal_cuts_the_line():
+    clock = FakeClock()
+    out = Tty()
+    run_timer(1, "a rather long label", clock=clock, sleep=clock.sleep, out=out, width=12)
+    assert frames(out.getvalue()) == ["00:01  a ra", "00:00  a ra"]
 
 
 def test_cli_rejects_bad_duration(capsys):
